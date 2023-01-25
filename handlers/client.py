@@ -5,7 +5,8 @@ from db.models import User, Todo
 
 
 from aiogram.fsm.context import FSMContext
-from aiogram.filters.state import State, StatesGroup
+from handlers.state import FSMHandler
+
 
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
@@ -14,10 +15,7 @@ from sqlalchemy import delete
 
 
 
-class FSMHandler(StatesGroup):
-    '''Класс для добавления состояний'''
-    add_task = State()
-    delete_task = State()
+
 
 
 router = Router()
