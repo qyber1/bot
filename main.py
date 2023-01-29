@@ -3,7 +3,7 @@ import logging
 
 from create_bot import bot, dp
 from handlers import client
-from config import db_login,db_pass, db_host, db_name
+from config import url
 
 from db.engine import create_asyncengine, proseed_schemas, session_maker
 
@@ -16,7 +16,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 
-url =f'postgresql+asyncpg://{db_login}:{db_pass}@localhost:{db_host}/{db_name}'
 
 async def main():
 

@@ -4,6 +4,7 @@ from aiogram.filters import Command
 from db.models import User, Todo
 
 
+
 from aiogram.fsm.context import FSMContext
 from handlers.state import FSMHandler
 
@@ -11,8 +12,7 @@ from handlers.state import FSMHandler
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 from sqlalchemy import delete
-
-
+from db.requests import get_user, new_user, add_action, delete_action, show_action
 
 
 
@@ -23,15 +23,12 @@ router = Router()
 
 @router.message(Command(commands=['start']))
 async def commands_start(message: types.Message, db_pool: sessionmaker):
-    async with db_pool() as session:
-        async with session.begin():
-            user = await session.execute(select(User).where(User.id == message.from_user.id))
-            if user.scalar():
-                await message.answer(f'<code>Привет, {message.from_user.username}</code>', parse_mode= 'HTML')
-            else:
-                new_user = User(id = message.from_user.id)
-                session.add(new_user)
-                await message.answer(f"<code>Добро пожаловать, {message.from_user.username}</code>", parse_mode='HTML')
+    user = await get_user(db_pool, message.from_user.id)
+    if user:
+        await message.answer(f'<code>Привет, {message.from_user.username}</code>', parse_mode= 'HTML')
+    else:
+        await new_user(db_pool, message.from_user.id)
+        await message.answer(f"<code>Добро пожаловать, {message.from_user.username}</code>", parse_mode='HTML')
 
 
 @router.message(Command(commands=['add']))
@@ -48,10 +45,7 @@ async def echo(message: types.Message, state: FSMContext, db_pool: sessionmaker)
         await state.clear()
         await message.answer(f'<code>Задачи добавлены.\nВведите </code> /show <code> чтобы показать список дел </code>', parse_mode = 'HTML')
     else:
-        async with db_pool() as session:
-            async with session.begin():
-                action = Todo(action = message.text.lower(), parent_id = message.from_user.id)
-                session.add(action)
+        await add_action(db_pool, message.text, message.from_user.id)
         await message.answer('<code>Задача добавлена.\nВведи следующую...</code>', parse_mode= 'HTML')
         return echo
 
@@ -59,18 +53,12 @@ async def echo(message: types.Message, state: FSMContext, db_pool: sessionmaker)
 @router.message(Command(commands=['delete']))
 async def deletetask(message: types.Message, state: FSMContext, db_pool: sessionmaker):
     '''Функция для перехода к функции удалению задач через состояние и команду delete'''
-    async with db_pool() as session:
-        async with session.begin():
-            actions = await session.execute(select(Todo.action).join(User).where(Todo.parent_id == message.from_user.id))
-            action = actions.scalar()
-            if isinstance(action, str):
-                await state.set_state(FSMHandler.delete_task)
-                await message.answer('<code>Введите выполненную задачу для удаления. \nДля остановки введите слово "стоп"</code>', parse_mode= 'HTML')
-            else:
-                await message.answer('<code>Нет задач. Для добавления нажмите</code> /add', parse_mode='HTML')
-
-
-
+    action = await delete_action(db_pool, message.from_user.id)
+    if action:
+        await state.set_state(FSMHandler.delete_task)
+        await message.answer('<code>Введите выполненную задачу для удаления. \nДля остановки введите слово "стоп"</code>', parse_mode= 'HTML')
+    else:
+        await message.answer('<code>Нет задач. Для добавления нажмите</code> /add', parse_mode='HTML')
 
 
 @router.message(FSMHandler.delete_task)
@@ -81,15 +69,12 @@ async def edit(message: types.Message, state: FSMContext, db_pool: sessionmaker)
         await message.answer(f'<code>Задачи отредактированы.</code>', parse_mode='HTML')
 
     else:
-
         async with db_pool() as session:
             async with session.begin():
-
                 actions = await session.execute(select(Todo.action).join(User).where(
                     Todo.action == message.text.lower()).where(
                     Todo.parent_id == message.from_user.id))
                 action = actions.scalar()
-                print(action)
                 if isinstance(action, str):
                     await session.execute(delete(Todo).where(Todo.action == action).where(Todo.parent_id == message.from_user.id))
 
@@ -112,16 +97,15 @@ async def edit(message: types.Message, state: FSMContext, db_pool: sessionmaker)
 async def show_task(message: types.Message, db_pool: sessionmaker):
     '''Функия для показа текущих дел.'''
     list_action = []
-    async with db_pool() as session:
-        async with session.begin():
-            actions = await session.execute(select(Todo.action).where(Todo.parent_id == message.from_user.id))
-            for action in actions.fetchall():
-                list_action.append(action[0])
-            output_action = '\n'.join(list_action)
-            if list_action:
-                await message.answer(f'<code>Твои задачи на день:</code> \n\n{output_action}', parse_mode='HTML')
-            else:
-                await message.answer(f'<code>Задач нет!</code>', parse_mode='HTML')
+    actions = await show_action(db_pool, message.from_user.id)
+    print(actions)
+    for action in actions:
+        list_action.append(action[0])
+        __output_action = '\n'.join(list_action)
+    if list_action:
+        await message.answer(f'<code>Твои задачи на день:</code> \n\n{__output_action}', parse_mode='HTML')
+    else:
+        await message.answer(f'<code>Задач нет!</code>', parse_mode='HTML')
 
 
 

@@ -7,7 +7,7 @@ class User(BaseModel):
 
     __tablename__ = 'users'
 
-    id = Column(Integer,unique=True, primary_key=True)
+    id = Column(Integer, unique=True, primary_key=True)
     username = Column(String, unique=False)
     child = relationship('Todo')
 
