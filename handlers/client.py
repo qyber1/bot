@@ -1,15 +1,14 @@
 from aiogram import types, Router
 from aiogram.filters import Command
 
-from db.models import User, Todo
+
 
 from aiogram.fsm.context import FSMContext
 from handlers.state import FSMHandler
 
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.future import select
-from sqlalchemy import delete
-from db.requests import get_user, new_user, add_action, delete_action, show_action
+
+from db.requests import get_user, new_user, add_action, delete_actions, show_action, check_action, delete_action, get_all_action
 
 router = Router()
 
@@ -48,7 +47,7 @@ async def echo(message: types.Message, state: FSMContext, db_pool: sessionmaker)
 @router.message(Command(commands=['delete']))
 async def deletetask(message: types.Message, state: FSMContext, db_pool: sessionmaker):
     '''Функция для перехода к функции удалению задач через состояние и команду delete'''
-    action = await delete_action(db_pool, message.from_user.id)
+    action = await delete_actions(db_pool, message.from_user.id)
     if action:
         await state.set_state(FSMHandler.delete_task)
         await message.answer(
@@ -66,30 +65,20 @@ async def edit(message: types.Message, state: FSMContext, db_pool: sessionmaker)
         await message.answer(f'<code>Задачи отредактированы.</code>', parse_mode='HTML')
 
     else:
-        async with db_pool() as session:
-            async with session.begin():
-                actions = await session.execute(select(Todo.action).join(User).where(
-                    Todo.action == message.text.lower()).where(
-                    Todo.parent_id == message.from_user.id))
-                action = actions.scalar()
-                if isinstance(action, str):
-                    await session.execute(
-                        delete(Todo).where(Todo.action == action).where(Todo.parent_id == message.from_user.id))
-
-                    actions = await session.execute(select(Todo.action).join(User).where(
-                        Todo.parent_id == message.from_user.id))
-                    action = actions.scalar()
-                    if isinstance(action, str):
-                        await message.answer('<code>Задача удалена!\nВведи следующую...</code>', parse_mode='HTML')
-                        await session.commit()
-                        return edit
-                    else:
-                        await state.clear()
-                        await message.answer('<code>Задач больше нет. Поздравляю!</code>', parse_mode='HTML')
-                elif isinstance(action, type(None)):
-                    await message.answer('<code>Такой задачи нет в списке. Введите ещё раз...</code>',
+        action = await check_action(db_pool, message.text.lower(), message.from_user.id)
+        if isinstance(action, str):
+            await delete_action(db_pool, action, message.from_user.id)
+            action = await get_all_action(db_pool, message.from_user.id)
+            if isinstance(action, str):
+                await message.answer('<code>Задача удалена!\nВведи следующую...</code>', parse_mode='HTML')
+                return edit
+            else:
+                await state.clear()
+                await message.answer('<code>Задач больше нет. Поздравляю!</code>', parse_mode='HTML')
+        elif isinstance(action, type(None)):
+            await message.answer('<code>Такой задачи нет в списке. Введите ещё раз...</code>',
                                          parse_mode='HTML')
-                    return edit
+            return edit
 
 
 @router.message(Command(commands=['show']))
@@ -100,9 +89,9 @@ async def show_task(message: types.Message, db_pool: sessionmaker):
     print(actions)
     for action in actions:
         list_action.append(action[0])
-        __output_action = '\n'.join(list_action)
+        output_action = '\n'.join(list_action)
     if list_action:
-        await message.answer(f'<code>Твои задачи на день:</code> \n\n{__output_action}', parse_mode='HTML')
+        await message.answer(f'<code>Твои задачи на день:</code> \n\n{output_action}', parse_mode='HTML')
     else:
         await message.answer(f'<code>Задач нет!</code>', parse_mode='HTML')
 
