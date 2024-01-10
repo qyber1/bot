@@ -15,6 +15,7 @@ class User(BaseModel):
     __tablename__ = "User"
 
     id = Column(Integer, unique=True, primary_key=True)
+    tg_id = Column(Integer, unique=True, nullable=False)
     username = Column(String(60), unique=False)
     job_title = Column(String)
     departament_id = Column(Integer, ForeignKey("Departament.id"))

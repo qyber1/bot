@@ -11,7 +11,7 @@ from handlers.state import FSMHandler
 
 from sqlalchemy.orm import sessionmaker
 
-from utils.db import get_departaments, get_current_departament, add_employer
+from utils.db import get_user, get_departaments, get_current_departament, add_employer
 from utils.keyboard import get_departament, REG, WORK, APPLY
 from filters.registration_filter import DepartamentFilter
 
@@ -20,8 +20,11 @@ router = Router()
 
 
 @router.message(Command(commands=['start']))
-async def commands_start(message: Message):
-    await message.answer(f"Добро пожаловать! Для дальнейшего пользования необходимо зарегистрироваться: ",
+async def commands_start(message: Message, db_pool: sessionmaker):
+    if await get_user(db_pool, message.from_user.id):
+        await message.answer('Добро пожаловать', reply_markup=WORK)
+    else:
+        await message.answer(f"Добро пожаловать! Для дальнейшего пользования необходимо зарегистрироваться: ",
                          parse_mode='HTML',
                          reply_markup=REG)
 
@@ -75,6 +78,6 @@ async def switch(call: CallbackQuery, state: FSMContext, db_pool: sessionmaker):
         await state.clear()
     else:
         full_info = await state.get_data()
-        await add_employer(db_pool, full_info)
+        await add_employer(db_pool, full_info, call.from_user.id)
         await call.message.edit_text('Данные сохранены!',
                                      reply_markup=WORK)

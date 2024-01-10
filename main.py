@@ -6,11 +6,12 @@ from utils.config import BotConfig, DBConfig
 from handlers import registration, time_logging
 from utils.db import get_engine, proseed_schemas, session_maker
 
+
+bot = Bot(BotConfig.bot_token)
 logging.basicConfig(level=logging.INFO)
 
 
 async def main():
-    bot = Bot(BotConfig.bot_token)
     dp = Dispatcher()
 
     dp.include_router(registration.router)
