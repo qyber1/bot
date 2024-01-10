@@ -1,22 +1,26 @@
 import asyncio
 import logging
 
-from create_bot import bot, dp
-from handlers import client
-from config import url
-
-from db.engine import create_asyncengine, proseed_schemas, session_maker
+from aiogram import Bot, Dispatcher
+from utils.config import BotConfig, DBConfig
+from handlers import registration, time_logging
+from utils.db import get_engine, proseed_schemas, session_maker
 
 logging.basicConfig(level=logging.INFO)
 
 
 async def main():
-    dp.include_router(client.router)
+    bot = Bot(BotConfig.bot_token)
+    dp = Dispatcher()
 
-    async_engine = create_asyncengine(url)
-    session = session_maker(async_engine)
-    await proseed_schemas(async_engine)
+    dp.include_router(registration.router)
+    dp.include_router(time_logging.router)
 
+    async_ = get_engine(DBConfig.url)
+    session = session_maker(async_.engine)
+    await proseed_schemas(async_.engine)
+
+    await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, db_pool=session)
 
 
