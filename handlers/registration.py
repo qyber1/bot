@@ -11,7 +11,7 @@ from handlers.state import FSMHandler
 
 from sqlalchemy.orm import sessionmaker
 
-from utils.db import get_user, get_departaments, get_current_departament, add_employer
+from utils.db import get_user, get_departments, get_current_departament, add_employer
 from utils.keyboard import get_departament, REG, WORK, APPLY
 from filters.registration_filter import DepartamentFilter
 
@@ -29,11 +29,15 @@ async def commands_start(message: Message, db_pool: sessionmaker):
                          reply_markup=REG)
 
 
+@router.callback_query(F.data.in_(['not_start_day', 'not_finish_day']))
+async def main_menu(call: CallbackQuery):
+    await call.message.edit_text('Добро пожаловать', reply_markup=WORK)
+
 
 
 @router.callback_query(F.data == 'registration')
 async def registration_handler(call: CallbackQuery, db_pool: sessionmaker):
-    args = await get_departaments(db_pool)
+    args = await get_departments(db_pool)
     await call.message.edit_text(f'Отлично, выберите отдел в котором Вы работаете: ',
                                  parse_mode='HTML',
                                  reply_markup=get_departament(args))
@@ -41,9 +45,9 @@ async def registration_handler(call: CallbackQuery, db_pool: sessionmaker):
 
 @router.callback_query(DepartamentFilter())
 async def choice_departament(call: CallbackQuery, db_pool: sessionmaker, state: FSMContext):
-    departament = await get_current_departament(db_pool, call.data)
-    print(departament)
-    await state.set_data({'departament': departament})
+    department = await get_current_departament(db_pool, call.data)
+    print(department)
+    await state.set_data({'department': department})
     await state.set_state(FSMHandler.get_name)
     await call.message.edit_text(f'Введите ФИО: ',
                                  parse_mode='HTML',
@@ -66,7 +70,7 @@ async def get_job_title(msg: Message, state: FSMContext):
                              'job_title': msg.text.capitalize()})
     await msg.answer('Карточка сотрудника:\n'
                      f'ФИО: {"".join(name["name"])}\n'
-                     f'Отдел: {name["departament"][0][-1]}\n'
+                     f'Отдел: {name["department"][0][-1]}\n'
                      f'Должность: {msg.text.capitalize()}\n'
                      f'Дата приема на работу: {date}',
                      reply_markup=APPLY)

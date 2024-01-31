@@ -1,13 +1,11 @@
-import os
-import asyncio
-
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-from .base import metadata
+from .models import BaseModel
 
 
 
-async def proseed_schemas(engine: AsyncEngine, metadata=metadata):
+
+async def proseed_schemas(engine: AsyncEngine, metadata=BaseModel.metadata):
     async with engine.begin() as conn:
         await conn.run_sync(metadata.create_all)
 

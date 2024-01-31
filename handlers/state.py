@@ -1,1 +1,1 @@
-from aiogram.filters.state import State, StatesGroupclass FSMHandler(StatesGroup):    '''Класс для добавления состояний'''    get_name = State()    get_job_title = State()
+from aiogram.filters.state import State, StatesGroupclass FSMHandler(StatesGroup):    '''Класс для добавления состояний'''    get_name = State()    get_job_title = State()class FinishDay(StatesGroup):    get_info = State()

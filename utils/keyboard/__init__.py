@@ -1,1 +1,1 @@
-from .keyboards import REG, WORK, APPLY, CONTROL_MENU, get_departament
+from .keyboards import REG, WORK, APPLY, START_MENU, END_MENU, get_departament

@@ -39,16 +39,25 @@ WORK = InlineKeyboardMarkup(
 )
 
 
-CONTROL_MENU = InlineKeyboardMarkup(
+START_MENU = InlineKeyboardMarkup(
     inline_keyboard=[
         [
             InlineKeyboardButton(text='Начать рабочий день', callback_data='start_work')
         ],
         [
-            InlineKeyboardButton(text='Отойти на обед', callback_data="dinner")
-        ],
+            InlineKeyboardButton(text='Отмена', callback_data='not_start_day')
+        ]
+    ]
+)
+
+
+END_MENU = InlineKeyboardMarkup(
+    inline_keyboard=[
         [
             InlineKeyboardButton(text='Закончить рабочий день', callback_data='end_work')
+        ],
+        [
+            InlineKeyboardButton(text='Отмена', callback_data='not_finish_day')
         ]
     ]
 )
