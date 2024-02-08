@@ -13,10 +13,11 @@ from main import bot
 
 router = Router()
 
+
 @router.callback_query(F.data == 'go')
 async def start_logging_time(call: CallbackQuery, db_pool: sessionmaker):
     current_date = await validate_work_day(db_pool, call.from_user.id)
-    print(current_date)
+    print(f"{current_date=}")
     if current_date:
         if current_date[0][0] == datetime.now().date():
             if current_date[0][1] is None:
@@ -24,8 +25,8 @@ async def start_logging_time(call: CallbackQuery, db_pool: sessionmaker):
                                  reply_markup=END_MENU)
             else:
                 await call.message.edit_text(f'Рабочий день закончен! До завтра')
-        else:
-            await call.message.edit_text(
+    else:
+        await call.message.edit_text(
             f'Добро пожаловать в меню управления. Рабочий день ещё не начался. Начать рабочий день?',
             reply_markup=START_MENU)
 

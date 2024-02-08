@@ -4,8 +4,6 @@ from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.types import CallbackQuery, Message
 
-
-
 from aiogram.fsm.context import FSMContext
 from handlers.state import FSMHandler
 
@@ -74,6 +72,7 @@ async def get_job_title(msg: Message, state: FSMContext):
                      f'Должность: {msg.text.capitalize()}\n'
                      f'Дата приема на работу: {date}',
                      reply_markup=APPLY)
+
 
 @router.callback_query(F.data.in_(['apply', 'cancel']))
 async def switch(call: CallbackQuery, state: FSMContext, db_pool: sessionmaker):

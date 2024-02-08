@@ -27,13 +27,14 @@ async def get_departments(db_pool: sessionmaker):
     async with db_pool() as session:
         async with session.begin():
             user = await session.execute(select(Department.id, Department.title))
+            print(f'{user=}')
             return user.fetchall()
 
 
-async def get_current_departament(db_pool: sessionmaker, user_id: int):
+async def get_current_departament(db_pool: sessionmaker, dep_id: int):
     async with db_pool() as session:
         async with session.begin():
-            depo = await session.execute(select(Department.id, Department.title).where(Department.id == user_id))
+            depo = await session.execute(select(Department.id, Department.title).where(Department.id == int(dep_id)))
             return depo.fetchall()
 
 

@@ -14,7 +14,7 @@ async def proseed_schemas(engine: AsyncEngine, metadata=BaseModel.metadata):
 
 
 def session_maker(engine: AsyncEngine) -> sessionmaker:
-    sessionmaker(engine, class_=AsyncSession)
+    return sessionmaker(engine, class_=AsyncSession)
 
 
 class DBConnect:
