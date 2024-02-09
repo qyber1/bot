@@ -22,8 +22,12 @@ async def main():
     await proseed_schemas(async_.engine)
 
     await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot, db_pool=session)
-
+    try:
+        await dp.start_polling(bot, db_pool=session)
+    except asyncio.CancelledError:
+        pass
+    finally:
+        await bot.session.close()
 
 if __name__ == "__main__":
     asyncio.run(main())

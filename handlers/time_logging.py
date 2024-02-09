@@ -25,6 +25,10 @@ async def start_logging_time(call: CallbackQuery, db_pool: sessionmaker):
                                  reply_markup=END_MENU)
             else:
                 await call.message.edit_text(f'Рабочий день закончен! До завтра')
+        else:
+            await call.message.edit_text(
+                f'Добро пожаловать в меню управления. Рабочий день ещё не начался. Начать рабочий день?',
+                reply_markup=START_MENU)
     else:
         await call.message.edit_text(
             f'Добро пожаловать в меню управления. Рабочий день ещё не начался. Начать рабочий день?',
