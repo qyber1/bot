@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from handlers.state import FinishDay
 
-from utils.db import get_full_info, start_work_day,get_worklog_id, finish_work_day ,validate_work_day
+from utils.db import get_full_info, start_work_day, get_worklog_id, finish_work_day, validate_work_day
 from utils.keyboard import START_MENU, END_MENU
 from main import bot
 
@@ -22,7 +22,7 @@ async def start_logging_time(call: CallbackQuery, db_pool: sessionmaker):
         if current_date[0][0] == datetime.now().date():
             if current_date[0][1] is None:
                 await call.message.edit_text(f'Добро пожаловать в меню управления. Рабочий день уже идет. Завершить рабочий день?',
-                                 reply_markup=END_MENU)
+                                             reply_markup=END_MENU)
             else:
                 await call.message.edit_text(f'Рабочий день закончен! До завтра')
         else:
@@ -30,12 +30,12 @@ async def start_logging_time(call: CallbackQuery, db_pool: sessionmaker):
                 f'Добро пожаловать в меню управления. Рабочий день ещё не начался. Начать рабочий день?',
                 reply_markup=START_MENU)
     else:
-        await call.message.edit_text(
+        (await call.message.edit_text(
             f'Добро пожаловать в меню управления. Рабочий день ещё не начался. Начать рабочий день?',
             reply_markup=START_MENU)
+         @ router.callback_query(F.data == 'start_work'))
 
 
-@router.callback_query(F.data == 'start_work')
 async def start_day(call: CallbackQuery, db_pool: sessionmaker):
     start_day = datetime.now().hour
     name = await get_full_info(db_pool, call.from_user.id)
@@ -59,7 +59,7 @@ async def get_info_about_day(call: CallbackQuery, db_pool: sessionmaker, state: 
 
 
 @router.message(StateFilter(FinishDay.get_info))
-async def finish_day(msg: Message, db_pool:sessionmaker, state: FSMContext):
+async def finish_day(msg: Message, db_pool: sessionmaker, state: FSMContext):
     info = await state.get_data()
     await finish_work_day(db_pool, info["id"], msg.text)
     print(msg.text)

@@ -23,14 +23,13 @@ async def commands_start(message: Message, db_pool: sessionmaker):
         await message.answer('Добро пожаловать', reply_markup=WORK)
     else:
         await message.answer(f"Добро пожаловать! Для дальнейшего пользования необходимо зарегистрироваться: ",
-                         parse_mode='HTML',
-                         reply_markup=REG)
+                             parse_mode='HTML',
+                             reply_markup=REG)
 
 
 @router.callback_query(F.data.in_(['not_start_day', 'not_finish_day']))
 async def main_menu(call: CallbackQuery):
     await call.message.edit_text('Добро пожаловать', reply_markup=WORK)
-
 
 
 @router.callback_query(F.data == 'registration')
