@@ -16,7 +16,7 @@ router = Router()
 
 @router.callback_query(F.data == 'go')
 async def start_logging_time(call: CallbackQuery, db_pool: sessionmaker):
-    current_date = await validate_work_day(db_pool, call.from_user.id)
+    current_date: datetime.date = await validate_work_day(db_pool, call.from_user.id)
     print(f"{current_date=}")
     if current_date:
         if current_date[0][0] == datetime.now().date():
@@ -30,12 +30,12 @@ async def start_logging_time(call: CallbackQuery, db_pool: sessionmaker):
                 f'Добро пожаловать в меню управления. Рабочий день ещё не начался. Начать рабочий день?',
                 reply_markup=START_MENU)
     else:
-        (await call.message.edit_text(
+        await call.message.edit_text(
             f'Добро пожаловать в меню управления. Рабочий день ещё не начался. Начать рабочий день?',
             reply_markup=START_MENU)
-         @ router.callback_query(F.data == 'start_work'))
 
 
+@router.callback_query(F.data == 'start_work')
 async def start_day(call: CallbackQuery, db_pool: sessionmaker):
     start_day = datetime.now().hour
     name = await get_full_info(db_pool, call.from_user.id)
